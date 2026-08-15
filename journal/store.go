@@ -72,11 +72,30 @@ func (s *Store) Put(key, value string) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, err := s.write(b); err != nil {
+	pos, err := s.file.Seek(0, io.SeekCurrent)
+	if err != nil {
 		return fmt.Errorf("append journal: %w", err)
+	}
+	n, writeErr := s.write(b)
+	if writeErr == nil && n != len(b) {
+		writeErr = io.ErrShortWrite
+	}
+	if writeErr != nil {
+		if err := s.rollback(pos); err != nil {
+			return fmt.Errorf("append journal: %w; rollback: %v", writeErr, err)
+		}
+		return fmt.Errorf("append journal: %w", writeErr)
 	}
 	s.values[key] = value
 	return nil
+}
+
+func (s *Store) rollback(pos int64) error {
+	if err := s.file.Truncate(pos); err != nil {
+		return err
+	}
+	_, err := s.file.Seek(pos, io.SeekStart)
+	return err
 }
 
 func (s *Store) Get(key string) (string, bool) {
