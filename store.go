@@ -65,10 +65,10 @@ func (s *Store) ReserveBatch(batch []Reservation) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if total > s.capacity-s.used {
-		return ErrCapacityExceeded
-	}
 	for _, reservation := range batch {
+		if reservation.Units > s.capacity-s.used {
+			return ErrCapacityExceeded
+		}
 		s.reservations[reservation.Name] += reservation.Units
 		s.used += reservation.Units
 	}
