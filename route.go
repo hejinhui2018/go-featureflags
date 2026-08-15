@@ -43,6 +43,14 @@ func (r *Route) Match(req *http.Request, match *RouteMatch) bool {
 		return false
 	}
 
+	// Clear any ErrNotFound left over by a previous route's query matcher
+	// failure so that a subsequent successful match is not mistaken for a
+	// 404. ErrMethodMismatch is intentionally preserved: the method-mismatch
+	// recovery logic below relies on it.
+	if match.MatchErr == ErrNotFound {
+		match.MatchErr = nil
+	}
+
 	var matchErr error
 
 	// Match everything.
