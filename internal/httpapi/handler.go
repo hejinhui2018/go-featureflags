@@ -19,7 +19,7 @@ func NewHandler(memory *store.Memory) http.Handler {
 }
 
 type writeRequest struct {
-	Value string `json:"value"`
+	Value *string `json:"value"`
 }
 
 type response struct {
@@ -43,11 +43,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, response{Error: "invalid JSON"})
 			return
 		}
-		if err := h.store.Put(r.Context(), key, req.Value); err != nil {
+		if req.Value == nil {
+			writeJSON(w, http.StatusBadRequest, response{Error: "invalid value"})
+			return
+		}
+		if err := h.store.Put(r.Context(), key, *req.Value); err != nil {
 			writeStoreError(w, err)
 			return
 		}
-		writeJSON(w, http.StatusOK, response{Key: strings.TrimSpace(key), Value: req.Value})
+		writeJSON(w, http.StatusOK, response{Key: strings.TrimSpace(key), Value: *req.Value})
 	case http.MethodGet:
 		value, err := h.store.Get(r.Context(), key)
 		if err != nil {
