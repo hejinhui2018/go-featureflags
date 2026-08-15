@@ -61,6 +61,35 @@ func TestPutUpdatesValueAndTTL(t *testing.T) {
 	}
 }
 
+func TestPutRejectsNegativeTTLWithoutChangingStore(t *testing.T) {
+	clock := &fakeClock{now: time.Unix(1000, 0)}
+	s := New(clock.Now)
+	if err := s.Put("theme", "dark", 0); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		key   string
+		value string
+	}{
+		{key: "new", value: "value"},
+		{key: "theme", value: "light"},
+	} {
+		if err := s.Put(tc.key, tc.value, -time.Nanosecond); !errors.Is(err, ErrInvalidTTL) {
+			t.Fatalf("Put(%q) expected ErrInvalidTTL, got %v", tc.key, err)
+		}
+	}
+	if got := s.Len(); got != 1 {
+		t.Fatalf("rejected writes changed len to %d", got)
+	}
+	got, err := s.Get("theme")
+	if err != nil || got != "dark" {
+		t.Fatalf("rejected update changed value: value=%q err=%v", got, err)
+	}
+	if _, err := s.Get("new"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("rejected insert created a record: %v", err)
+	}
+}
+
 func TestEmptyKeyAndDelete(t *testing.T) {
 	s := New(nil)
 	if err := s.Put("", "value", time.Second); !errors.Is(err, ErrEmptyKey) {

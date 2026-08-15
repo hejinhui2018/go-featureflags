@@ -32,6 +32,9 @@ func New(now func() time.Time) *Store {
 
 // Put stores a value. A zero TTL keeps the value until it is deleted.
 func (s *Store) Put(key, value string, ttl time.Duration) error {
+	if ttl < 0 {
+		return ErrInvalidTTL
+	}
 	if key == "" {
 		return ErrEmptyKey
 	}
