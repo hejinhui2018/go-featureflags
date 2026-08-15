@@ -11,9 +11,10 @@ import (
 // from changing the response already sent to the client.
 func Timeout(limit time.Duration, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		buf := &bufferedWriter{header: make(http.Header), status: http.StatusOK}
 		finished := make(chan struct{})
 		go func() {
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(buf, r)
 			close(finished)
 		}()
 
@@ -21,6 +22,11 @@ func Timeout(limit time.Duration, next http.Handler) http.Handler {
 		defer timer.Stop()
 		select {
 		case <-finished:
+			bufferedResponse{
+				header: buf.header,
+				status: buf.status,
+				body:   append([]byte(nil), buf.body.Bytes()...),
+			}.writeTo(w)
 		case <-timer.C:
 			writeTimeout(w)
 		}
