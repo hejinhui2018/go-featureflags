@@ -48,7 +48,7 @@ func ParseRange(header string, size int64) (ByteRange, error) {
 		if suffix > size {
 			suffix = size
 		}
-		return ByteRange{Start: 0, End: suffix - 1}, nil
+		return ByteRange{Start: size - suffix, End: size - 1}, nil
 	}
 
 	start, err := strconv.ParseInt(parts[0], 10, 64)
