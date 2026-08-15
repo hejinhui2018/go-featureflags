@@ -35,6 +35,8 @@ func (s *Store) Append(value string) Record {
 }
 
 // List returns up to limit records starting at offset.
+// If offset is beyond the end of the records slice, an empty page and a nil
+// error are returned.
 func (s *Store) List(offset, limit int) ([]Record, error) {
 	if offset < 0 {
 		return nil, ErrInvalidOffset
@@ -44,6 +46,9 @@ func (s *Store) List(offset, limit int) ([]Record, error) {
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	if offset > len(s.records) {
+		offset = len(s.records)
+	}
 	end := offset + limit
 	if end > len(s.records) {
 		end = len(s.records)
