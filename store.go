@@ -62,7 +62,7 @@ func (s *Store) Get(key string) ([]byte, bool) {
 	if !ok {
 		return nil, false
 	}
-	if s.now().After(saved.expiresAt) {
+	if !s.now().Before(saved.expiresAt) {
 		delete(s.entries, key)
 		return nil, false
 	}
