@@ -26,7 +26,7 @@ func (s *Service) Enabled(ctx context.Context, tenant, name string) (bool, error
 		return false, ErrInvalidArgument
 	}
 
-	key := name
+	key := tenant + "\x00" + name
 	s.mu.RLock()
 	cached, ok := s.cache[key]
 	s.mu.RUnlock()

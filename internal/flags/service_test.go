@@ -32,6 +32,26 @@ func TestServiceEnabledValidatesInput(t *testing.T) {
 	}
 }
 
+func TestServiceCacheSeparatesTenants(t *testing.T) {
+	store := NewMemoryStore(map[string]map[string]bool{
+		"tenant-a": {"checkout": true},
+		"tenant-b": {"checkout": false},
+	})
+	service := NewService(store)
+
+	first, err := service.Enabled(context.Background(), "tenant-a", "checkout")
+	if err != nil {
+		t.Fatalf("tenant-a lookup failed: %v", err)
+	}
+	second, err := service.Enabled(context.Background(), "tenant-b", "checkout")
+	if err != nil {
+		t.Fatalf("tenant-b lookup failed: %v", err)
+	}
+	if !first || second {
+		t.Fatalf("values = tenant-a:%v tenant-b:%v, want true and false", first, second)
+	}
+}
+
 type countingStore struct {
 	value bool
 	calls int
