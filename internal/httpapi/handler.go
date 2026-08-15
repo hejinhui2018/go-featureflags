@@ -30,7 +30,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	key := strings.TrimPrefix(r.URL.Path, "/v1/records/")
-	if key == "" {
+	if strings.TrimSpace(key) == "" {
 		writeJSON(w, http.StatusBadRequest, response{Error: "invalid key"})
 		return
 	}
