@@ -1,4 +1,4 @@
-package flags
+﻿package flags
 
 import (
 	"context"
@@ -24,6 +24,10 @@ func (s *Service) Enabled(ctx context.Context, tenant, name string) (bool, error
 	name = strings.TrimSpace(name)
 	if tenant == "" || name == "" {
 		return false, ErrInvalidArgument
+	}
+
+	if err := ctx.Err(); err != nil {
+		return false, err
 	}
 
 	key := tenant + ":" + name

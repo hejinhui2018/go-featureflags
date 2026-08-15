@@ -1,26 +1,26 @@
-# Whitespace in Successful Flag Responses
+# Cancelled Flag Lookups
 
 ## Behavior
 
-The service accepts leading or trailing spaces in the tenant header and flag path. The lookup uses the trimmed identifiers, but a successful JSON response echoes the untrimmed values.
+Calling the flag service with an already cancelled context can still return a successful flag value.
 
 ## Reproduction
 
 ```sh
-curl -H 'X-Tenant-ID:  tenant-a  ' 'http://localhost:8080/v1/flags/%20checkout%20'
+go test ./internal/flags -run '^TestServiceEnabledCancelledContextReturnsError$' -count=20
 ```
 
 ## Expected result
 
-The response identifies the queried objects with `"tenant":"tenant-a"` and `"flag":"checkout"`.
+The call returns `context.Canceled`, returns `false`, and does not read from the store.
 
 ## Observed result on the base revision
 
-The response contains the original whitespace, such as `"tenant":"  tenant-a  "` and `"flag":" checkout "`, even though the lookup uses the trimmed identifiers.
+The call returns the configured flag value with no error, even though its context was cancelled before the lookup.
 
 ## Verification
 
 ```sh
-go test ./internal/httpapi -run '^TestHandlerTrimsWhitespaceInResponse$' -count=20
+go test ./internal/flags -run '^TestServiceEnabledCancelledContext(ReturnsError|DoesNotPolluteCache)$' -count=20
 go test ./...
 ```

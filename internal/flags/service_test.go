@@ -1,4 +1,4 @@
-package flags
+﻿package flags
 
 import (
 	"context"
@@ -62,6 +62,56 @@ func TestServiceEnabledIsolatesTenants(t *testing.T) {
 	}
 	if !enabledA2 {
 		t.Fatal("Enabled(tenant-a, checkout) second call = false, want true")
+	}
+}
+
+func TestServiceEnabledCancelledContextReturnsError(t *testing.T) {
+	store := &countingStore{value: true}
+	service := NewService(store)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	enabled, err := service.Enabled(ctx, "tenant-a", "checkout")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Enabled() error = %v, want context.Canceled", err)
+	}
+	if enabled {
+		t.Fatal("Enabled() = true, want false on cancelled context")
+	}
+	if store.calls != 0 {
+		t.Fatalf("store calls = %d, want 0 on cancelled context", store.calls)
+	}
+}
+
+func TestServiceEnabledCancelledContextDoesNotPolluteCache(t *testing.T) {
+	store := &countingStore{value: true}
+	service := NewService(store)
+
+	// Populate cache with a normal call.
+	enabled, err := service.Enabled(context.Background(), "tenant-a", "checkout")
+	if err != nil || !enabled {
+		t.Fatalf("Enabled() = (%v, %v), want (true, nil)", enabled, err)
+	}
+
+	// Cancelled context should still return error even when value is cached.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	enabled, err = service.Enabled(ctx, "tenant-a", "checkout")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Enabled() error = %v, want context.Canceled", err)
+	}
+	if enabled {
+		t.Fatal("Enabled() = true, want false on cancelled context")
+	}
+
+	// Normal call after cancelled context should still work from cache.
+	enabled, err = service.Enabled(context.Background(), "tenant-a", "checkout")
+	if err != nil || !enabled {
+		t.Fatalf("Enabled() = (%v, %v), want (true, nil)", enabled, err)
+	}
+	if store.calls != 1 {
+		t.Fatalf("store calls = %d, want 1", store.calls)
 	}
 }
 
