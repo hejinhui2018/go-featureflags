@@ -72,7 +72,20 @@ func (s *Store) Put(key, value string) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	// Record the file position before writing so that on failure
+	// we can roll back any partial data and keep the journal valid.
+	pos, err := s.file.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return fmt.Errorf("append journal: %w", err)
+	}
+
 	if _, err := s.write(b); err != nil {
+		// A partial write may have left a truncated JSON line in
+		// the file.  Truncate back to the pre-write position so
+		// the journal stays readable on reopen.
+		_ = s.file.Truncate(pos)
+		_, _ = s.file.Seek(pos, io.SeekStart)
 		return fmt.Errorf("append journal: %w", err)
 	}
 	s.values[key] = value
