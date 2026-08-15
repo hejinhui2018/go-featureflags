@@ -8,3 +8,4 @@ Docker arm64 target: docker build --platform linux/arm64 -f Dockerfile -t coordi
 Docker arm64 full: docker run --rm --platform linux/arm64 --name coordinator-p1-http-timeout-late-write-003-model-arm64-full coordinator-p1-http-timeout-late-write-003-model:arm64 -> exit 0.
 Image inspection: amd64=amd64/linux; arm64=arm64/linux. No task containers remain.
 Trajectory source: trajectory.native.jsonl, 68103 bytes, SHA256 8418B4735FFD60F47B64549DAEB8CFE4CA826CB7635059FD8C4EB650BE38FFFE.
+COS readback: HTTP 200 from the permanent signed link; downloaded file 68103 bytes with SHA256 8418B4735FFD60F47B64549DAEB8CFE4CA826CB7635059FD8C4EB650BE38FFFE, exactly matching the source.
