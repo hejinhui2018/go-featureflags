@@ -29,7 +29,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := strings.TrimPrefix(r.URL.Path, "/v1/flags/")
-	tenant := r.Header.Get("X-Tenant-ID")
+	tenant := strings.TrimSpace(r.Header.Get("X-Tenant-ID"))
 	enabled, err := h.service.Enabled(r.Context(), tenant, name)
 	if err != nil {
 		switch {
