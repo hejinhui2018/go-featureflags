@@ -59,19 +59,34 @@ func getAllMethodsForRoute(r *Router, req *http.Request) ([]string, error) {
 	var allMethods []string
 
 	err := r.Walk(func(route *Route, _ *Router, _ []*Route) error {
+		// Collect every routeRegexp matcher (path, host, query, prefix)
+		// on the route.  When a route lives on a subrouter it inherits the
+		// parent PathPrefix regexp in addition to its own full-path regexp.
+		// All of them must match; checking only the first one (which may be
+		// a broad prefix matcher) causes sibling routes' methods to leak in.
+		var regexpMatchers []*routeRegexp
 		for _, matcher := range route.matchers {
-			if _, ok := matcher.(*routeRegexp); ok {
-				if matcher.Match(req, &RouteMatch{}) {
-					methods, err := route.GetMethods()
-					if err != nil {
-						return err
-					}
-
-					allMethods = append(allMethods, methods...)
-				}
-				break
+			if rr, ok := matcher.(*routeRegexp); ok {
+				regexpMatchers = append(regexpMatchers, rr)
 			}
 		}
+
+		if len(regexpMatchers) == 0 {
+			return nil
+		}
+
+		for _, rr := range regexpMatchers {
+			if !rr.Match(req, &RouteMatch{}) {
+				return nil
+			}
+		}
+
+		methods, err := route.GetMethods()
+		if err != nil {
+			return err
+		}
+
+		allMethods = append(allMethods, methods...)
 		return nil
 	})
 
