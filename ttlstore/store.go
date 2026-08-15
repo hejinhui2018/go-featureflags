@@ -31,9 +31,13 @@ func New(now func() time.Time) *Store {
 }
 
 // Put stores a value. A zero TTL keeps the value until it is deleted.
+// A negative TTL is rejected with ErrInvalidTTL without modifying the store.
 func (s *Store) Put(key, value string, ttl time.Duration) error {
 	if key == "" {
 		return ErrEmptyKey
+	}
+	if ttl < 0 {
+		return ErrInvalidTTL
 	}
 	expiresAt := time.Time{}
 	if ttl != 0 {

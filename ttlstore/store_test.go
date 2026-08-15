@@ -79,3 +79,47 @@ func TestEmptyKeyAndDelete(t *testing.T) {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
+
+func TestNegativeTTLRejectedOnPut(t *testing.T) {
+	clock := &fakeClock{now: time.Unix(1000, 0)}
+	s := New(clock.Now)
+
+	// A negative TTL must be rejected and must not create a new entry.
+	err := s.Put("newkey", "v1", -1*time.Second)
+	if !errors.Is(err, ErrInvalidTTL) {
+		t.Fatalf("expected ErrInvalidTTL, got %v", err)
+	}
+	if got := s.Len(); got != 0 {
+		t.Fatalf("store should be empty after rejected put, got len=%d", got)
+	}
+	if _, err := s.Get("newkey"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("key should not exist after rejected put, got err=%v", err)
+	}
+}
+
+func TestNegativeTTLRejectedOnUpdate(t *testing.T) {
+	clock := &fakeClock{now: time.Unix(1000, 0)}
+	s := New(clock.Now)
+
+	// Seed the store with a permanent value.
+	if err := s.Put("k", "original", 0); err != nil {
+		t.Fatal(err)
+	}
+
+	// Attempt to update with a negative TTL — must be rejected.
+	err := s.Put("k", "changed", -5*time.Second)
+	if !errors.Is(err, ErrInvalidTTL) {
+		t.Fatalf("expected ErrInvalidTTL, got %v", err)
+	}
+
+	// The original value and its permanent expiry must be intact.
+	got, err := s.Get("k")
+	if err != nil || got != "original" {
+		t.Fatalf("expected original value, got value=%q err=%v", got, err)
+	}
+	clock.Advance(time.Hour)
+	got, err = s.Get("k")
+	if err != nil || got != "original" {
+		t.Fatalf("original value should still exist after advance, got value=%q err=%v", got, err)
+	}
+}
