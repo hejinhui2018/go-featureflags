@@ -68,3 +68,58 @@ func TestListReturnsCopy(t *testing.T) {
 		t.Fatalf("caller changed stored value: %+v", again[0])
 	}
 }
+
+// TestListOffsetBeyondEnd is the regression test for the panic that occurred
+// when offset was greater than the number of stored records. The store must
+// return an empty page and a nil error instead of crashing.
+func TestListOffsetBeyondEnd(t *testing.T) {
+	s := New()
+	s.Append("alpha")
+	s.Append("beta")
+
+	// offset far beyond the end - this used to panic.
+	page, err := s.List(5, 2)
+	if err != nil {
+		t.Fatalf("expected nil error for out-of-range offset, got %v", err)
+	}
+	if len(page) != 0 {
+		t.Fatalf("expected empty page, got %+v", page)
+	}
+}
+
+// TestListOffsetEqualsRecordCount verifies that an offset exactly equal to
+// the record count returns an empty page with nil error.
+func TestListOffsetEqualsRecordCount(t *testing.T) {
+	s := New()
+	s.Append("alpha")
+	s.Append("beta")
+
+	page, err := s.List(2, 5)
+	if err != nil {
+		t.Fatalf("expected nil error when offset == record count, got %v", err)
+	}
+	if len(page) != 0 {
+		t.Fatalf("expected empty page, got %+v", page)
+	}
+}
+
+// TestListOffsetBeyondEndDoesNotAffectStorage verifies that an out-of-range
+// List call has no side effects on the stored records.
+func TestListOffsetBeyondEndDoesNotAffectStorage(t *testing.T) {
+	s := New()
+	s.Append("alpha")
+	s.Append("beta")
+
+	_, _ = s.List(100, 10)
+
+	page, err := s.List(0, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page) != 2 {
+		t.Fatalf("storage changed after out-of-range List: got %d records, want 2", len(page))
+	}
+	if page[0].Value != "alpha" || page[1].Value != "beta" {
+		t.Fatalf("storage content changed: %+v", page)
+	}
+}
