@@ -1,6 +1,6 @@
 Base commit: e571c40bfaca82172b8bf836a61d8e9bacf245ea
 Base reproduction: go test ./... -run '^TestTimeoutDiscardsLateHandlerWrite$' -count=20 -> exit 1; all 20 iterations showed the timeout body followed by the late handler response.
-Gold commit: a891c711f4e86b4944e81e3fc3cb75eebeb9777f
+修复提交: a891c711f4e86b4944e81e3fc3cb75eebeb9777f
 Local targeted verification: go test ./... -run '^TestTimeoutDiscardsLateHandlerWrite$' -count=20 -> exit 0.
 Local full verification: go test ./... -count=1 -> exit 0.
 Docker amd64: docker build --platform linux/amd64 -f Dockerfile -t coordinator-p1-http-timeout-late-write-003-model:amd64 . -> success; docker run --rm --name coordinator-p1-http-timeout-late-write-003-model-amd64 coordinator-p1-http-timeout-late-write-003-model:amd64 -> exit 0.
