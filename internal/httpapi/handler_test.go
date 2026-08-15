@@ -35,3 +35,17 @@ func TestGetMissingRecord(t *testing.T) {
 		t.Fatalf("body = %q, want not-found response", got)
 	}
 }
+
+func TestGetRecordWhitespaceKey(t *testing.T) {
+	handler := NewHandler(store.NewMemory(map[string]string{"alpha": "one"}))
+	req := httptest.NewRequest(http.MethodGet, "/v1/records/%20%20", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+	if got := rec.Body.String(); got != "{\"error\":\"invalid key\"}\n" {
+		t.Fatalf("body = %q, want invalid key response", got)
+	}
+}
