@@ -46,7 +46,7 @@ func (s *Store) Put(key, value string, expectedRevision int64) (Record, error) {
 		s.records[key] = created
 		return created, nil
 	}
-	if expectedRevision != 0 && expectedRevision != current.Revision {
+	if expectedRevision == 0 || expectedRevision != current.Revision {
 		return Record{}, ErrConflict
 	}
 	updated := Record{Key: key, Value: value, Revision: current.Revision + 1}
