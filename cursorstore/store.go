@@ -1,4 +1,4 @@
-package cursorstore
+﻿package cursorstore
 
 import (
 	"errors"
@@ -33,17 +33,23 @@ func (s *Store) Put(key, value string) {
 }
 
 // List returns up to limit entries after the supplied key. An empty cursor starts at the first entry.
+// A non-empty cursor that does not match any stored key yields ErrInvalidCursor.
 func (s *Store) List(after string, limit int) ([]Entry, string, error) {
 	if limit <= 0 {
 		return nil, "", ErrInvalidLimit
 	}
 	start := 0
 	if after != "" {
+		found := false
 		for i, entry := range s.entries {
 			if entry.Key == after {
 				start = i + 1
+				found = true
 				break
 			}
+		}
+		if !found {
+			return nil, "", ErrInvalidCursor
 		}
 	}
 	if start >= len(s.entries) {
