@@ -44,7 +44,7 @@ func (l *Ledger) ApplyBatch(entries []Entry) error {
 	}
 
 	for _, entry := range entries {
-		next := l.balances[entry.Account] + entry.Delta
+		next := pending[entry.Account] + entry.Delta
 		if next < 0 {
 			return ErrInsufficientFunds
 		}
