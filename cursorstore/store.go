@@ -39,12 +39,17 @@ func (s *Store) List(after string, limit int) ([]Entry, string, error) {
 	}
 	start := 0
 	if after != "" {
+		cursorIndex := -1
 		for i, entry := range s.entries {
 			if entry.Key == after {
-				start = i + 1
+				cursorIndex = i
 				break
 			}
 		}
+		if cursorIndex < 0 {
+			return nil, "", ErrInvalidCursor
+		}
+		start = cursorIndex + 1
 	}
 	if start >= len(s.entries) {
 		return []Entry{}, "", nil

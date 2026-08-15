@@ -35,6 +35,26 @@ func TestListAfterCursor(t *testing.T) {
 	}
 }
 
+func TestListRejectsUnknownCursor(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		store *Store
+	}{
+		{name: "populated store", store: seeded()},
+		{name: "empty store", store: New()},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, next, err := tc.store.List("missing", 2)
+			if !errors.Is(err, ErrInvalidCursor) {
+				t.Fatalf("expected ErrInvalidCursor, got %v", err)
+			}
+			if got != nil || next != "" {
+				t.Fatalf("expected no page data, got entries=%v next=%q", got, next)
+			}
+		})
+	}
+}
+
 func TestListLimitValidation(t *testing.T) {
 	_, _, err := seeded().List("", 0)
 	if !errors.Is(err, ErrInvalidLimit) {
