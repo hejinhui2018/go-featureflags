@@ -44,6 +44,9 @@ func (s *Store) List(offset, limit int) ([]Record, error) {
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	if offset > len(s.records) {
+		return nil, nil
+	}
 	end := offset + limit
 	if end > len(s.records) {
 		end = len(s.records)
