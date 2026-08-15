@@ -52,6 +52,10 @@ func (p *Processor) Process(ctx context.Context, key string, payload []byte, exe
 	defer p.mu.Unlock()
 
 	if saved, ok := p.records[key]; ok {
+		matchesPayload := saved.digest == digest
+		if !matchesPayload {
+			return Result{}, ErrKeyConflict
+		}
 		return cloneResult(saved.result), nil
 	}
 
