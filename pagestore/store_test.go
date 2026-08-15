@@ -68,3 +68,25 @@ func TestListReturnsCopy(t *testing.T) {
 		t.Fatalf("caller changed stored value: %+v", again[0])
 	}
 }
+
+func TestListOffsetAfterLastRecordReturnsEmpty(t *testing.T) {
+	s := New()
+	s.Append("alpha")
+	s.Append("beta")
+
+	page, err := s.List(5, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if page == nil || len(page) != 0 {
+		t.Fatalf("expected non-nil empty page, got %#v", page)
+	}
+
+	all, err := s.List(0, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 2 || all[0].Value != "alpha" || all[1].Value != "beta" {
+		t.Fatalf("out-of-range read changed records: %+v", all)
+	}
+}
