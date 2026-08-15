@@ -37,7 +37,7 @@ func (s *Store) Advance(stream string, offset int64) (bool, error) {
 	defer s.mu.Unlock()
 
 	current, exists := s.offsets[stream]
-	if exists && offset < current {
+	if exists && offset <= current {
 		return false, ErrStaleOffset
 	}
 	if exists && offset == current {
