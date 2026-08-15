@@ -30,7 +30,8 @@ func (s *Store) Put(key, value string) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if len(s.values) >= s.capacity {
+	_, exists := s.values[key]
+	if !exists && len(s.values) >= s.capacity {
 		return ErrCapacity
 	}
 	s.values[key] = value
