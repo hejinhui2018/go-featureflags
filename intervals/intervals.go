@@ -29,7 +29,7 @@ func Merge(input []Interval) []Interval {
 	merged := make([]Interval, 0, len(work))
 	current := work[0]
 	for _, next := range work[1:] {
-		if next.Start < current.End {
+		if next.Start <= current.End {
 			if next.End > current.End {
 				current.End = next.End
 			}
