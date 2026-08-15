@@ -1,27 +1,26 @@
-# Tenant Cache Scope Reproduction
+# Whitespace in Successful Flag Responses
 
 ## Behavior
 
-Cached flag values can cross tenant boundaries when two tenants use the same
-flag name. The first lookup populates the cache, and the second lookup can
-receive that cached value even when its stored configuration is different.
+The service accepts leading or trailing spaces in the tenant header and flag path. The lookup uses the trimmed identifiers, but a successful JSON response echoes the untrimmed values.
 
 ## Reproduction
 
-Run the focused regression test from the repository root:
-
 ```sh
-go test ./internal/flags -run '^TestServiceEnabledSeparatesTenantCaches$' -count=1
+curl -H 'X-Tenant-ID:  tenant-a  ' 'http://localhost:8080/v1/flags/%20checkout%20'
 ```
 
 ## Expected result
 
-`tenant-a/checkout` returns `true` and `tenant-b/checkout` returns `false`.
+The response identifies the queried objects with `"tenant":"tenant-a"` and `"flag":"checkout"`.
 
-## Observed result
+## Observed result on the base revision
 
-The base revision fails with:
+The response contains the original whitespace, such as `"tenant":"  tenant-a  "` and `"flag":" checkout "`, even though the lookup uses the trimmed identifiers.
 
-```text
-Enabled(tenant-b, checkout) = true, want false
+## Verification
+
+```sh
+go test ./internal/httpapi -run '^TestHandlerTrimsWhitespaceInResponse$' -count=20
+go test ./...
 ```

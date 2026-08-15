@@ -30,6 +30,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	name := strings.TrimPrefix(r.URL.Path, "/v1/flags/")
 	tenant := r.Header.Get("X-Tenant-ID")
+	name = strings.TrimSpace(name)
+	tenant = strings.TrimSpace(tenant)
 	enabled, err := h.service.Enabled(r.Context(), tenant, name)
 	if err != nil {
 		switch {
