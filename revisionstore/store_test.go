@@ -41,6 +41,24 @@ func TestStaleRevisionReturnsConflict(t *testing.T) {
 	}
 }
 
+func TestCreateOnlyRevisionConflictsWithExistingRecord(t *testing.T) {
+	s := New()
+	created, err := s.Put("theme", "dark", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Put("theme", "light", 0); !errors.Is(err, ErrConflict) {
+		t.Fatalf("expected ErrConflict, got %v", err)
+	}
+	got, err := s.Get("theme")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != created {
+		t.Fatalf("conflict changed record: got=%+v want=%+v", got, created)
+	}
+}
+
 func TestMissingRecordWithRevisionReturnsNotFound(t *testing.T) {
 	s := New()
 	if _, err := s.Put("missing", "value", 3); !errors.Is(err, ErrNotFound) {
