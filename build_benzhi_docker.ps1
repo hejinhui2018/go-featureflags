@@ -5,7 +5,16 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $tag = "coordinator-p2-cursorstore-validation-008:$Arch"
-$base = "coordinator-p2-cursorstore-validation-008-base:$Arch"
+$binaryDir = Join-Path $PSScriptRoot '.docker-bin'
+$binary = Join-Path $binaryDir "cursorstore-$Arch.test"
 
-docker build --pull=false --build-arg "BASE_IMAGE=$base" --platform "linux/$Arch" -f benzhi.Dockerfile -t $tag .
+New-Item -ItemType Directory -Path $binaryDir -Force | Out-Null
+$env:GOOS = 'linux'
+$env:GOARCH = $Arch
+$env:CGO_ENABLED = '0'
+$env:GOTOOLCHAIN = 'local'
+go test -c -o $binary ./cursorstore
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+docker build --pull=false --build-arg "TARGETARCH=$Arch" --platform "linux/$Arch" -f benzhi.Dockerfile -t $tag .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

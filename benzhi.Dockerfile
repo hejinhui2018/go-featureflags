@@ -1,10 +1,6 @@
-ARG BASE_IMAGE=golang:1.23
-FROM ${BASE_IMAGE}
+FROM scratch
 
-WORKDIR /src
-COPY go.mod ./
-COPY README.md BUG_REPRO.md ./
-COPY cmd ./cmd
-COPY cursorstore ./cursorstore
+ARG TARGETARCH
+COPY .docker-bin/cursorstore-${TARGETARCH}.test /cursorstore.test
 
-CMD ["go", "test", "./..."]
+ENTRYPOINT ["/cursorstore.test"]
