@@ -26,6 +26,10 @@ func (s *Service) Enabled(ctx context.Context, tenant, name string) (bool, error
 		return false, ErrInvalidArgument
 	}
 
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+
 	key := tenant + ":" + name
 	s.mu.RLock()
 	cached, ok := s.cache[key]

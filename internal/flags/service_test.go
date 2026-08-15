@@ -65,6 +65,53 @@ func TestServiceEnabledIsolatesTenants(t *testing.T) {
 	}
 }
 
+func TestServiceEnabledCancelledContextReturnsError(t *testing.T) {
+	store := &countingStore{value: true}
+	service := NewService(store)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	enabled, err := service.Enabled(ctx, "tenant-a", "checkout")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Enabled() error = %v, want context.Canceled", err)
+	}
+	if enabled {
+		t.Fatal("Enabled() = true, want false on cancelled context")
+	}
+	if store.calls != 0 {
+		t.Fatalf("store calls = %d, want 0 on cancelled context", store.calls)
+	}
+}
+
+func TestServiceEnabledCancelledContextDoesNotPolluteCache(t *testing.T) {
+	store := &countingStore{value: true}
+	service := NewService(store)
+
+	enabled, err := service.Enabled(context.Background(), "tenant-a", "checkout")
+	if err != nil || !enabled {
+		t.Fatalf("Enabled() = (%v, %v), want (true, nil)", enabled, err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	enabled, err = service.Enabled(ctx, "tenant-a", "checkout")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Enabled() error = %v, want context.Canceled", err)
+	}
+	if enabled {
+		t.Fatal("Enabled() = true, want false on cancelled context")
+	}
+
+	enabled, err = service.Enabled(context.Background(), "tenant-a", "checkout")
+	if err != nil || !enabled {
+		t.Fatalf("Enabled() = (%v, %v), want (true, nil)", enabled, err)
+	}
+	if store.calls != 1 {
+		t.Fatalf("store calls = %d, want 1", store.calls)
+	}
+}
+
 type countingStore struct {
 	value bool
 	calls int
