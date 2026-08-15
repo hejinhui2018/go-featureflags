@@ -14,7 +14,7 @@ func Merge(input []Interval) []Interval {
 		return nil
 	}
 
-	work := append([]Interval(nil), input...)
+	work := input
 	for i := range work {
 		if work[i].Start > work[i].End {
 			work[i].Start, work[i].End = work[i].End, work[i].Start
