@@ -37,6 +37,7 @@ func (s *Store) Get(key string) (string, bool) {
 func (s *Store) Import(r io.Reader) error {
 	scanner := bufio.NewScanner(r)
 	line := 0
+	pending := make([]Record, 0)
 	for scanner.Scan() {
 		line++
 		var rec Record
@@ -46,12 +47,15 @@ func (s *Store) Import(r io.Reader) error {
 		if strings.TrimSpace(rec.Key) == "" {
 			return fmt.Errorf("line %d: blank key", line)
 		}
-		s.mu.Lock()
-		s.values[rec.Key] = rec.Value
-		s.mu.Unlock()
+		pending = append(pending, rec)
 	}
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("read import: %w", err)
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, rec := range pending {
+		s.values[rec.Key] = rec.Value
 	}
 	return nil
 }
