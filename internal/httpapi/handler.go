@@ -43,6 +43,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, response{Error: "invalid JSON"})
 			return
 		}
+		if req.Value == "" {
+			writeJSON(w, http.StatusBadRequest, response{Error: "invalid value"})
+			return
+		}
 		if err := h.store.Put(r.Context(), key, req.Value); err != nil {
 			writeStoreError(w, err)
 			return
