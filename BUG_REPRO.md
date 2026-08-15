@@ -1,11 +1,12 @@
 # Bug Reproduction
 
-同一个 HTTP 路径可以注册多条只在查询参数上不同的 GET 路由。请求第二条路由的查询参数时，路由器却返回 404，而不是调用对应的处理函数。
+给子路由启用 `CORSMethodMiddleware` 后，嵌套路径的正常请求会把兄弟路由的方法也写进 `Access-Control-Allow-Methods`。同一路由直接挂在根路由时响应头正常。
 
 复现步骤：
 
-1. 注册 `GET /api?foo=<数字>` 路由。
-2. 再注册 `GET /api?bar=<数字>` 路由。
-3. 发送 `GET /api?bar=4` 请求。
+1. 创建 `/test` 子路由。
+2. 在子路由上注册 `/hello/{name}` 的 `GET` 和 `OPTIONS` 方法。
+3. 给子路由启用 `CORSMethodMiddleware`。
+4. 发送 `GET /test/hello/alice` 请求。
 
-期望请求匹配第二条路由并得到成功响应；当前行为是匹配失败。已有的 method、path 和单条 query 路由行为应保持不变。
+期望响应头为 `Access-Control-Allow-Methods: GET,OPTIONS`；当前响应头还包含兄弟 `/hello` 路由的 `POST` 方法。根路由的 CORS 方法响应、路径匹配和其他中间件行为应保持不变。
