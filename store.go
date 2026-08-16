@@ -66,9 +66,6 @@ func (s *Store) Append(stream string, sequence int64, value string) (bool, error
 		s.streams[stream] = state
 		return false, nil
 	}
-	if sequence > state.next {
-		return false, ErrSequenceGap
-	}
 	state.records[sequence] = value
 	state.next++
 	s.streams[stream] = state
