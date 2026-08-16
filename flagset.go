@@ -107,7 +107,7 @@ func (set *FlagSet) Set(name, value string) error {
 // empty string if the requested element does not exist.
 func (set *FlagSet) Arg(i int) string {
 	var arg string
-	if len(set.Args()) < i {
+	if len(set.Args()) > i {
 		arg = set.Args()[i]
 	}
 	return arg

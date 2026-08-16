@@ -1,6 +1,7 @@
 package getopt
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -71,4 +72,27 @@ func TestDuration(t *testing.T) {
 	err := p.parse([]string{"bin", "-d", "1h3m", "normal arg"})
 	assert.Nil(err, "Expected err to be nil")
 	assert.Equal(time.Hour+3*time.Minute, *d, "Expected -d to equal 1 hour and 3 minutes")
+}
+
+func TestFlagSetArgReturnsRemainingArguments(t *testing.T) {
+	assert := assert.New(t)
+
+	// Save and restore os.Args
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+
+	os.Args = []string{"bin", "-a", "first", "second"}
+
+	p := NewFlagSet("", 0)
+	var a bool
+	p.BoolVar(&a, "a", false, "set a")
+
+	err := p.Parse()
+	assert.Nil(err, "Expected err to be nil")
+	assert.True(a, "Expected -a to be set")
+
+	assert.Equal("first", p.Arg(0), "Arg(0) should return first remaining argument")
+	assert.Equal("second", p.Arg(1), "Arg(1) should return second remaining argument")
+	assert.Equal("", p.Arg(2), "Arg(2) should return empty string when out of range")
+	assert.Equal(2, p.NArg(), "NArg should return number of remaining arguments")
 }
