@@ -32,5 +32,9 @@ func (b *Bucket) Release(n int) {
 	if n <= 0 {
 		return
 	}
+	if n >= b.used {
+		b.used = 0
+		return
+	}
 	b.used -= n
 }
