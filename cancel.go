@@ -13,7 +13,7 @@ const requestMarker contextKey = "request-marker"
 // cancellation and deadline signals carried by the incoming request.
 func MarkRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.WithValue(context.Background(), requestMarker, "edge")
+		ctx := context.WithValue(r.Context(), requestMarker, "edge")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
