@@ -1,3 +1,3 @@
-module github.com/hejinhui2018/go-featureflags
+module tokenbucket
 
 go 1.22

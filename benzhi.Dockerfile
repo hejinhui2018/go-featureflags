@@ -1,11 +1,6 @@
-FROM golang:1.22
-
-WORKDIR /app
-
-COPY go.mod ./
-RUN go mod download
-
+ARG BASE_IMAGE=golang:1.23-alpine
+FROM ${BASE_IMAGE}
+WORKDIR /src
 COPY . .
-RUN go build ./...
-
-CMD ["bash"]
+RUN go test ./... && go vet ./... && go build ./...
+CMD ["go", "test", "./..."]

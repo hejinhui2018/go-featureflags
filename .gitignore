@@ -1,5 +1,0 @@
-*.exe
-*.test
-coverage.out
-dist/
-vendor/
