@@ -36,7 +36,7 @@ func (c *Cache) Get(key string) (string, bool) {
 	if !ok {
 		return "", false
 	}
-	if c.now().After(item.expiresAt) {
+	if !c.now().Before(item.expiresAt) {
 		delete(c.items, key)
 		return "", false
 	}
